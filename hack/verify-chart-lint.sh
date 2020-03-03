@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2017 The Kubernetes Authors.
+# Copyright 2020 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
+set -o errexit
+set -o nounset
+set -o pipefail
 
-export PATH="$HOME/.kubeadm-dind-cluster:$SCRIPT_ROOT/build:$PATH"
+KUBE_ROOT="$( cd "$(dirname "$0")../" >/dev/null 2>&1 ; pwd -P )"
 
-dind-cluster-v1.11.sh down
-dind-cluster-v1.11.sh clean
-
+ct lint --charts ${KUBE_ROOT}/charts/ingress-nginx --validate-maintainers=false

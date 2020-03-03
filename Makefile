@@ -27,7 +27,7 @@ endif
 SHELL=/bin/bash -o pipefail -o errexit
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.29.0
+TAG ?= 0.30.0
 
 # Use docker to run makefile tasks
 USE_DOCKER ?= true
@@ -120,7 +120,7 @@ push: .push-$(ARCH) ## Publish image for a particular arch.
 # internal task
 .PHONY: .push-$(ARCH)
 .push-$(ARCH):
-	docker push $(BASE_IMAGE)-$(ARCH):$(TAG)
+	docker push $(REGISTRY)/nginx-ingress-controller-${ARCH}:$(TAG)
 
 .PHONY: build
 build: check-go-version ## Build ingress controller, debug tool and pre-stop hook.
@@ -157,12 +157,12 @@ clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
 
 .PHONY: static-check
-static-check: ## Run verification script for boilerplate, codegen, gofmt, golint and lualint.
+static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 ifeq ($(USE_DOCKER), true)
 	@build/run-in-docker.sh \
-		build/static-check.sh
+		hack/verify-all.sh
 else
-	@build/static-check.sh
+	@hack/verify-all.sh
 endif
 
 .PHONY: test
@@ -251,11 +251,6 @@ live-docs: ## Build and launch a local copy of the documentation website in http
 		--progress plain \
 		-t ingress-nginx/mkdocs images/mkdocs
 	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
-
-.PHONY: build-docs
-build-docs: ## Build documentation (output in ./site directory).
-	@docker build --pull -t ingress-nginx/mkdocs images/mkdocs
-	@docker run --rm -v ${PWD}:/docs ingress-nginx/mkdocs build
 
 .PHONY: misspell
 misspell: check-go-version ## Check for spelling errors.
